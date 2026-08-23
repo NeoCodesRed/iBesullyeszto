@@ -42,7 +42,7 @@ const IB_KIEMELES_VIZUALIS_ELTAVOLITASA_FELIRAT = true;
 //    - "ELREJT" = Az ilyen termékek elrejtése.
 //    - "HALVANYIT" = Az ilyen termékek elhalványítása.
 //    - "HAGY" = Semmi ne történjen az ilyen termékekkel.
-const IB_NEM_OLDALRA_ILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA = "HALVANYIT";
+const IB_NEM_ODAILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA = "HALVANYIT";
 
 
 
@@ -318,7 +318,7 @@ function IB_RemoveHighlighting(card)
 /** Injects custom CSS to the document head, that can be used to mark highlighted cards that are out of place if their handling mode is set so. */
 function IB_InjectIbCssIfNeeded()
 {
-    if (IB_NEM_OLDALRA_ILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA.toUpperCase() === "HALVANYIT")
+    if (IB_NEM_ODAILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA.toUpperCase() === "HALVANYIT")
     {
         var ibCss = document.createElement('style');
         ibCss.innerHTML = IB_CSS_STYLE_HIGHLIGHTED_OUT_OF_PLACE;
@@ -459,7 +459,7 @@ function IB_Main(grid)
             
             if (isHighlightedPriceOutsideNormalRange)
             {
-                switch (IB_NEM_OLDALRA_ILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA.toUpperCase())
+                switch (IB_NEM_ODAILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA.toUpperCase())
                 {
                     case "ELREJT":
                         highlightedCard.style.display = IB_STYLE_DISPLAY_NONE;
