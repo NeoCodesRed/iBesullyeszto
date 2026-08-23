@@ -4,7 +4,7 @@
 
 A te OCD-det is idegesíti, hogy ár szerint sorba rendeznél termékeket az iPon oldalán, de azok a szerencsétlen kiemelt termékek csak nem rendeződnek, hanem ott állnak a lista elején?
 
-Ez a szkript képes
+Na, ez a szkript képes
 1. Eltávolítani a kiemelt termékek vizuális megkülönböztető elemeit (lila keret és "KIEMELT" felirat, külön-külön szabályozható)
 2. Kikényszeríteni az ár szerinti növekvő vagy csökkenő rendezését a termékeknek (akkor is, ha más van beállítva az oldalon)
     - Ebbe természetesen bele tartoznak a kiemelt termékek is, vagyis nem kerülnek többé a táblázat tetejére
