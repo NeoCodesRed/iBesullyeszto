@@ -20,7 +20,7 @@ Na, ez a szkript képes
     - vagy a [Tampermonkey plug-int](https://www.tampermonkey.net/index.php?browser=firefox)
 - Chrome esetén telepítsd a [Tampermonkey plug-int](https://www.tampermonkey.net/index.php?browser=chrome)
 
-Majd [klikkelj ide](https://github.com/NeoCodesRed/iBesullyeszto/raw/refs/heads/main/iBesullyeszto.user.js), miután a plugin fut a böngésződben (privát ablak esetén valószínűleg külön engedélyezned kell a plugin beállításokban) és fogadd el a felugró ablakban a telepítést.
+Majd [klikkelj ide](https://github.com/NeoCodesRed/iBesullyeszto/raw/refs/heads/master/iBesullyeszto.user.js), miután a plugin fut a böngésződben (privát ablak esetén valószínűleg külön engedélyezned kell a plugin beállításokban) és fogadd el a felugró ablakban a telepítést.
 
 Kész. Ezután a szkript használatra kész és automatikusan frissülni is fog.
 
