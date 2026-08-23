@@ -28,6 +28,11 @@ Kész. Ezután a szkript használatra kész és automatikusan frissülni is fog.
 
 A szkript telepítése után a Greasemonkey / Tampermonkey plugin beállításainál meg tudod nyitni a szkript kódját és az elején lévő néhány beállítás értékének módosításával testre szabhatod a viselkedését.
 
+**<ins>MINDEN ALKALOMMAL, HA A SZKRIPT FRISSÜL, EZT ÚJRA MEG KELL TENNED, AMENNYIBEN A BEÁLLÍTÁSAID ELTÉRNEK AZ ALAPÉRTELMEZETT ÉRTÉKEKTŐL!</ins>**
+(Erre kitalálok majd valamit. 😉)
+
+Kézi módosítás nélkül az alapértelmezett értékek érvényesek.
+
 A beállítások lényegében az itt korábban leírt funkciókat kapcsolják ki/be, illetve részletes leírás van előttük a kódban, hogy pontosan mit csinálnak és milyen lehetőségeket adhatsz nekik értékül. Ezért itt csak egy nagyon rövid összefoglalót készítek:
 
 |                   Beállítás                    |                        Rövid leírás                       |        Lehetséges értékek       |       Alapértelmezett érték       |
@@ -37,8 +42,6 @@ A beállítások lényegében az itt korábban leírt funkciókat kapcsolják ki
 | IB_NEM_ODAILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA | Ár alapján nem odaillő kiemelt termékek kezelésének módja | "ELREJT" / "HALVANYIT" / "HAGY" | "HALVANYIT"                       |
 | IB_ALAPERTELMEZETT_RENDEZES                    | Ár szerinti rendezés kikényszerítése                      | "ASC" / "DESC" / null           | null                              |
 | IB_BOVEBB_LOGOLAS_ENGEDELYEZVE                 | Bővebb logolás (technikai)                                | true / false                    | false                             |
-
-Kézi módosítás nélkül az alapértelmezett értékek érvényesek.
 
 # Jogi dolgok
 
