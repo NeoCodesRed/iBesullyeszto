@@ -2,9 +2,12 @@
 // @name        iBesullyeszto
 // @description Kiemelt termékek helyett pragmatikus, ár szerinti rendezés.
 // @include     /^https?://(www\.)?ipon\.hu/shop.*$/
-// @icon        https://i.imgur.com/62WJRj4.png
-// @version     1.0
 // @grant       none
+// @icon        https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/main/iBesullyeszto_icon.png
+// @downloadURL https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/main/iBesullyeszto.user.js
+// @updateURL   https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/main/iBesullyeszto.user.js
+// @version     1.0
+// @author      Neo
 // ==/UserScript==
 
 
