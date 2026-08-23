@@ -419,12 +419,18 @@ function IB_Main(grid)
             IB_LogWarn(`Failed to determine sort direction from grid header or URL, attempting to use default ordering direction: "${IB_ALAPERTELMEZETT_RENDEZES.toUpperCase()}".`);
         }
 
-        sortDirection = IB_ALAPERTELMEZETT_RENDEZES.toUpperCase();
+        sortDirection = IB_ALAPERTELMEZETT_RENDEZES;
         if (!sortDirection)
         {
             IB_LogError("Failed to determine sort direction, ordering is skipped!");
             return;
         }
+        else
+        {
+            sortDirection = sortDirection.toUpperCase();
+        }
+
+        
 
         // Sorting ALL cards by price based on the determined sort direction
         allCards.sort((a, b) => IB_CompareCardsByPrice(a, b, sortDirection));
