@@ -1,94 +1,232 @@
 // ==UserScript==
-// @name        iBesullyeszto
+
+// @name        iBesüllyesztő
+// @namespace   Neo
 // @description Kiemelt termékek helyett pragmatikus, ár szerinti rendezés.
-// @include     /^https?://(www\.)?ipon\.hu/shop.*$/
-// @grant       none
+// @version     1.0.0
+// @author      Neo
+// @match       https://*.ipon.hu/shop/*
+
+// @require     https://openuserjs.org/src/libs/sizzle/GM_config.js
+// @grant       GM_getValue
+// @grant       GM_setValue
+// @grant       GM_registerMenuCommand
+
 // @icon        https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/master/iBesullyeszto_icon.png
 // @downloadURL https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/master/iBesullyeszto.user.js
 // @updateURL   https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/master/iBesullyeszto.user.js
-// @version     1.0
-// @author      Neo
+
 // ==/UserScript==
 
 
 
-// -------------------------------------------------- BEÁLLÍTÁSOK --------------------------------------------------
-// Szerkeszd ezt a részt az iBesullyeszto működésének testreszabásához.
-// A változtatások életbe lépéséhez a script mentése, majd az oldal újratöltése szükséges (F5).
-// Minden beállításnál a "Lehetőségek" részben található értékeket használhatod.
-// Másold ki őket pontosan a megjegyezések alatti "const" kezdetű sor végére.
-// Figyelj az idézőjelekre (ahol kellenek), illetve a sor végi pontosvessző megtartására,
-// különben a script (esetleg) nem fog működni (helyesen).
-// -----------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------- CONFIG CONSTANTS --------------------------------------------------
+const IB_CONFIG_ID = "iBesullyesztoConfig";
+const IB_CONFIG_TITLE = "iBesüllyesztő Beállítások";
+const IB_CONFIG_MENU_TITLE = "Beállítások";
+const IB_CONFIG_MENU_SHORTCUT = "B";
 
-// Be- vagy kikapcsolja a kiemelt termékek vizuális kiemelésének eltávolítását.
-// A lila keret (KERET) és "Kiemelt" felirat (FELIRAT) eltávolítása külön-külön kapcsolható.
-// Ha kikapcsolod, a kiemelt termékek vizuális jelzése megmarad.
-// Ez a funkció nem befolyásolja a többit, azokkal párhuzamosan képes működni.
-// Lehetőségek:
-//     - true = bekapcsolt vizuális eltávolítás
-//     - false = kikapcsolt vizuális eltávolítás
-const IB_KIEMELES_VIZUALIS_ELTAVOLITASA_KERET = true;
-const IB_KIEMELES_VIZUALIS_ELTAVOLITASA_FELIRAT = true;
+const IB_CONFIG_REMOVE_HIGHLIGHTING_TITLE = "Kiemelés vizuális elemeinek eltávolítása";
+const IB_CONFIG_REMOVE_HIGHLIGHTING_DESCRIPTION =
+`A lila keret és a "KIEMELT" felirat eltávolítása külön-külön kapcsolható.<br/>
+Ha nem pipálod be, a vizuális elem megmarad.<br/>
+Ez a funkció nem befolyásolja az alábbi funkciókat, azokkal párhuzamosan működik.`;
+const IB_CONFIG_REMOVE_HIGHLIGHTING_BORDER_LABEL = "Lila keret eltávolítása";
+const IB_CONFIG_REMOVE_HIGHLIGHTING_TEXT_LABEL = `"KIEMELT" felirat eltávolítása`;
+
+const IB_CONFIG_UNFITTING_HANDLE_MODE_TITLE = "Nem odaillő kiemelt termékek kezelésének módja";
+const IB_CONFIG_UNFITTING_HANDLE_MODE_DESCRIPTION =
+`Amennyiben ár alapján rendezettek a termékek (az oldalon avagy az itt beállított kikényszerített rendezés alapján),
+a script kezelni tudja azon kiemelt termékeket, amiknek eleve meg sem szabadott volna jelennie (még) áruk
+alapján (pl. mert drágábbak mint a legolcsóbb normál termék).<br/>
+Amint indokolt a termékek megjelenítése ár szerint (pl. mert lapoztál), a halványítás / elrejtés lekerül róluk.<br/>
+Ez a funkció NEM befolyásolja a kiemelés vizuális elemeinek eltávolítását, azzal párhuzamosan működik.`;
+const IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_HIDE = "Rejtsd el őket";
+const IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_FADE = "Halványítsd el őket";
+const IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_NONE = "Ne csinálj semmit velük";
+
+const IB_CONFIG_DEFAULT_SORT_TITLE = "Ár szerinti rendezés kényszerítése";
+const IB_CONFIG_DEFAULT_SORT_DESCRIPTION =
+`A script alkalmazkodik a "Legolcsóbb" és "Legdrágább" rendezésekhez amennyiben azok valamelyike aktív,
+de a többi fajta rendezés (pl. "Legnépszerűbb") esetén a nem odaillő kiemelt termékek kezelése, illetve sorrendezése nem fog működni.<br/>
+Ha szeretnéd, hogy a többi rendezési mód kiválasztása esetén is kikényszerítse a script az ár szerinti rendezést (növekvő vagy csökkenő irányba),
+akkor állítsd be ezen lehetőségek egyikét.<br/>
+Ha azonban használod a többi rendezési módot is az oldalon, akkor válaszd a "Kikapcsolva" opciót. Ez esetben a kiemelt termékek rendezése az oldalra marad bízva.<br/>
+Ezen beállítás semmilyen formában NEM befolyásolja a kiemelés vizuális elemeinek eltávolítását (amennyiben beállítottad fentebb),
+csakis a sorrendezést és az ár alapján oda nem illő termékek kezelését.`;
+const IB_CONFIG_DEFAULT_SORT_OPTION_ASC = "Növekvő";
+const IB_CONFIG_DEFAULT_SORT_OPTION_DESC = "Csökkenő";
+const IB_CONFIG_DEFAULT_SORT_OPTION_NONE = "Kikapcsolva";
+
+const IB_CONFIG_VERBOSE_LOGGING_TITLE = "Részletesebb logolás";
+const IB_CONFIG_VERBOSE_LOGGING_DESCRIPTION =
+`Be- vagy kikapcsolja az extra infók logolását a konzolra (F12 vagy Ctrl+Shift+I).
+Hibakereséshez hasznos (ha tudod mit csinálsz), de a működést nem befolyásolja.<br/>
+Megjegyzés: a script mindenképpen logolni fogja a figyelmeztetéseket (warn) és a hibákat (error), függetlenül ettől a beállítástól.`;
+const IB_CONFIG_VERBOSE_LOGGING_LABEL = "Részletesebb logolás engedélyezése";
+
+const IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_BORDER = "removeHiglightingBorder";
+const IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_TEXT = "removeHighlightingText";
+const IB_CONFIG_KEY_UNFITTING_HANDLING_MODE = "unfittingHandlingMode";
+const IB_CONFIG_KEY_DEFAULT_SORT = "defaultSort";
+const IB_CONFIG_KEY_VERBOSE_LOGGING = "verboseLogging";
+
+const IB_CONFIG_DEFAULT_VALUE_REMOVE_HIGHLIGHTING_BORDER = true;
+const IB_CONFIG_DEFAULT_VALUE_REMOVE_HIGHLIGHTING_TEXT = true;
+const IB_CONFIG_DEFAULT_VALUE_UNFITTING_HANDLING_MODE = IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_FADE;
+const IB_CONFIG_DEFAULT_VALUE_DEFAULT_SORT = IB_CONFIG_DEFAULT_SORT_OPTION_NONE;
+const IB_CONFIG_DEFAULT_VALUE_VERBOSE_LOGGING = false;
+
+const IB_CONFIG_HUN_RESET_LINK_TEXT = "Alapértelmezett értékek";
+const IB_CONFIG_HUN_CLOSE_BUTTON_TEXT = "Bezárás";
+const IB_CONFIG_HUN_SAVE_BUTTON_TEXT = "Mentés";
+
+const IB_CONFIG_STYLE =
+`
+/* IB custom styles */
+#${IB_CONFIG_ID} /* Applies to the full config modal window. */
+{
+    position: fixed;
+    display: block;
+    height: 85%;
+    width: 50%;
+    top: 48px; /* Same height as the website's header */
+    left: 25%;
+    right: auto;
+    bottom: auto;
+    margin: 0px;
+    border: none;
+    padding: 10px;
+    overflow: auto;
+    z-index: 1048576;
+    background-color: #151515;
+    color: #EEEEEE;
+
+    box-shadow:
+        0 25px 75px rgba(0, 0, 0, 0.55),
+        0 10px 25px rgba(0, 0, 0, 0.30);
+    
+    #iBesullyesztoConfig_header
+    {
+        background-color: #5500BB;
+        color: #00EE00;
+    }
+
+    #iBesullyesztoConfig_buttons_holder
+    {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    /* Save and close buttons. */
+    button.saveclose_buttons
+    {
+        min-width: 100px;
+        padding: 10px 20px;
+        font-weight: 600;
+        border: none;
+    }
+
+    #iBesullyesztoConfig_closeBtn
+    {
+        order: 1;
+        background-color: #757575;
+        color: #EEEEEE;
+
+        transition:
+            filter 0.25s ease;
+    }
+    #iBesullyesztoConfig_closeBtn:hover
+    {
+        filter: brightness(1.1);
+    }
+
+    #iBesullyesztoConfig_saveBtn
+    {
+        order: 2;
+        background-color: #5500BB;
+        color: #00EE00;
+        border: none;
+
+        transition:
+            filter 0.25s ease;
+    }
+    #iBesullyesztoConfig_saveBtn:hover
+    {
+        filter: brightness(1.1);
+    }
+    
+    .reset_holder
+    {
+        align-self: center;
+    }
+    
+    .reset
+    {
+        color: #EEEEEE;
+        align-self: center;
+        margin-right: 20px;
+        text-decoration: none;
+
+        transition:
+            color 0.25s ease,
+            text-decoration-color 0.15s ease;
+    }
+    .reset:hover
+    {
+        color: #FFFFFF;
+        text-decoration: underline;
+    }
+    
+    input[type="checkbox"]
+    {
+        width: 18px;
+        height: 18px;
+        margin-right: 10px;
+        border: 1px solid #555555;
+        border-radius: 0px;
+        cursor: pointer;
+
+        transition:
+            border-color 0.15s ease,
+    }
+
+    input[type="checkbox"]:hover
+    {
+        border-color: #818794;
+    }
+
+    select
+    {
+        width: 100%;
+        max-width: 300px;
+        padding: 10px 40px 10px 10px;
+        background-color: #252525;
+        color: #EEEEEE;
+        border: 1px solid #505050;
+        border-radius: 0px;
+        cursor: pointer;
+
+        transition:
+            border-color 0.15s ease,
+    }
+
+    select:hover
+    {
+        border-color: #757575;
+    }
+
+    select option
+    {
+        background-color: #252525;
+        color: #EEEEEE;
+    }
+}
+`;
 
 
 
-// Amennyiben ár alapján rendezettek a termékek
-// (az oldalon beállított sorrendezés, avagy az itt beállított alapértelmezett sorrendezés alapján),
-// a script kezelni tudja azon kiemelt termékeket, amiknek eleve meg sem szabadott volna jelennie (még) áruk alapján,
-// de mivel kiemeltek így megjelentek.
-// Ez a funkció NEM befolyásolja a kiemelés vizuális eltávolítását, azzal párhuzamosan képes működni.
-// Lehetőségek:
-//    - "ELREJT" = Az ilyen termékek elrejtése.
-//    - "HALVANYIT" = Az ilyen termékek elhalványítása.
-//    - "HAGY" = Semmi ne történjen az ilyen termékekkel.
-const IB_NEM_ODAILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA = "HALVANYIT";
-
-
-
-// Az alapértelmezett (kikényszerített) rendezés iránya (ha nincs kiválasztva ár szerinti rendezés).
-// Lehetőségek:
-//     - "ASC" = növekvő (olcsók elől)
-//     - "DESC" = csökkenő (drágák elől)
-//     - null = ne legyen alapértelmezett rendezés
-// Bővebben:
-// Az oldalon (jelenleg) a "Legnépszerűbb" az alapértelmezett rendezési sorrend, amíg nem választasz ki egy másikat.
-// A script alkalmazkodik a "Legolcsóbb"
-// vagy "Legdrágább" rendezésekhez amennyiben azok valamelyike aktív, de a többivel nem tud mit kezdeni (rendezés szempontjából).
-// Ha szeretnéd, hogy a többi rendezési mód kiválasztása esetén is "erőltesse" a script
-// az ár szerinti rendezést (növekvő vagy csökkenő irányba), akkor állítsd be ezen lehetőségek egyikét.
-// Ha azonban használod a többi rendezési módot, akkor adj meg null értéket itt, ilyenkor a script ilyen rendezések kiválasztása
-// esetén nem fogja erőltetni az ár szerinti rendezést. Ez esetben a kiemelt termékek rendezése az oldalra marad bízva.
-// Ezen beállítás semmilyen formában NEM befolyásolja a termék kiemelés vizuális eltávolítását (amennyiben beállítottad lentebb),
-// csakis a sorrendezést (illetve értelem szerűen az ár alapján nem oldalra illő kiemelt termékek kezelésének funkcióját,
-// aminek nincs értelme nem ár szerinti rendezésnél).   
-const IB_ALAPERTELMEZETT_RENDEZES = null;
-
-
-
-// Be- vagy kikapcsolja az extra infók logolását a konzolra (F12 vagy Ctrl+Shift+I).
-// Hibakereséshez hasznos (ha tudod mit csinálsz), de a működést nem befolyásolja.
-// Lehetőségek:
-//     - true = bekapcsolt extra logolás
-//     - false = kikapcsolt extra logolás
-// Megj.: a script mindenképpen logolni fogja a figyelmeztetéseket (warn) és a hibákat (error), függetlenül ettől a beállítástól.
-const IB_BOVEBB_LOGOLAS_ENGEDELYEZVE = false;
-
-
-
-
-
-
-
-
-
-
-// -------------------------------------------------- MOTORHÁZTETŐ ALATT --------------------------------------------------
-// Csak akkor nyúlj a kódhoz ezen vonal alatt, ha tudod mit csinálsz.
-
-
-
-// -------------------------------------------------- CONSTANTS --------------------------------------------------
+// -------------------------------------------------- SCRIPT CONSTANTS --------------------------------------------------
 const IB_REGEX_WHITESPACE = /\s+/g; // Matches all whitespace characters
 const IB_CURRENCY_SYMBOL = "Ft";
 
@@ -104,10 +242,12 @@ const IB_DATASET_KEY_HANDLED = "ib_isHandled"; // Used to tag product cards that
 
 const IB_CLASS_NAME_HIGHLIGHTED_OUT_OF_PLACE = "ib-outofplace-highlighted-card"; // Marks cards with a CSS style that shouldn't have appeared due to their price
 const IB_CSS_STYLE_HIGHLIGHTED_OUT_OF_PLACE =
-`div.${IB_CLASS_NAME_HIGHLIGHTED_OUT_OF_PLACE}
+`
+div.${IB_CLASS_NAME_HIGHLIGHTED_OUT_OF_PLACE}
 {
     opacity: 25% !important;
-}`;
+}
+`;
 const IB_STYLE_DISPLAY_NONE = "none";
 const IB_STYLE_DISPLAY_ORIGINAL = "block";
 
@@ -122,6 +262,173 @@ const IB_LOG_PREFIX = "---------- [iBesullyeszto]";
 
 
 // -------------------------------------------------- HELPERS --------------------------------------------------
+/** Defines, initalizes and registers the configuration modal window for IB. */
+function IB_InitConfig()
+{
+    // Define the config modal's structure and data fields
+    var configStructure =
+    {
+        [IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_BORDER]:
+        {
+            section:
+            [
+                IB_CONFIG_REMOVE_HIGHLIGHTING_TITLE,
+                IB_CONFIG_REMOVE_HIGHLIGHTING_DESCRIPTION
+            ],
+            label: IB_CONFIG_REMOVE_HIGHLIGHTING_BORDER_LABEL,
+            labelPos: "right",
+            type: "checkbox",
+            default: IB_CONFIG_DEFAULT_VALUE_REMOVE_HIGHLIGHTING_BORDER,
+        },
+
+        [IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_TEXT]:
+        {
+            label: IB_CONFIG_REMOVE_HIGHLIGHTING_TEXT_LABEL,
+            labelPos: "right",
+            type: "checkbox",
+            default: IB_CONFIG_DEFAULT_VALUE_REMOVE_HIGHLIGHTING_TEXT,
+        },
+
+        [IB_CONFIG_KEY_UNFITTING_HANDLING_MODE]:
+        {
+            section:
+            [
+                IB_CONFIG_UNFITTING_HANDLE_MODE_TITLE,
+                IB_CONFIG_UNFITTING_HANDLE_MODE_DESCRIPTION
+            ],
+            type: "select",
+            options:
+            [
+                IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_HIDE,
+                IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_FADE,
+                IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_NONE,
+            ],
+            default: IB_CONFIG_DEFAULT_VALUE_UNFITTING_HANDLING_MODE,
+        },
+
+        [IB_CONFIG_KEY_DEFAULT_SORT]:
+        {
+            section:
+            [
+                IB_CONFIG_DEFAULT_SORT_TITLE,
+                IB_CONFIG_DEFAULT_SORT_DESCRIPTION
+            ],
+            type: "select",
+            options:
+            [
+                IB_CONFIG_DEFAULT_SORT_OPTION_ASC,
+                IB_CONFIG_DEFAULT_SORT_OPTION_DESC,
+                IB_CONFIG_DEFAULT_SORT_OPTION_NONE,
+            ],
+            default: IB_CONFIG_DEFAULT_VALUE_DEFAULT_SORT,
+        },
+
+        [IB_CONFIG_KEY_VERBOSE_LOGGING]:
+        {
+            section:
+            [
+                IB_CONFIG_VERBOSE_LOGGING_TITLE,
+                IB_CONFIG_VERBOSE_LOGGING_DESCRIPTION
+            ],
+            label: IB_CONFIG_VERBOSE_LOGGING_LABEL,
+            labelPos: "right",
+            type: "checkbox",
+            default: IB_CONFIG_DEFAULT_VALUE_VERBOSE_LOGGING,
+        }
+    };
+
+    // Initalize the configuration modal
+    GM_config.init(
+    {
+        id: IB_CONFIG_ID,
+        title: IB_CONFIG_TITLE,
+        fields: configStructure,
+        events:
+        {
+            open: () =>
+            {
+                IB_LogInfo("iBesullyeszto settings opened.");
+            },
+            save: () =>
+            {
+                GM_setValue(IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_BORDER, GM_config.get(IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_BORDER));
+                GM_setValue(IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_TEXT,   GM_config.get(IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_TEXT));
+                GM_setValue(IB_CONFIG_KEY_UNFITTING_HANDLING_MODE,    GM_config.get(IB_CONFIG_KEY_UNFITTING_HANDLING_MODE));
+                GM_setValue(IB_CONFIG_KEY_DEFAULT_SORT,               GM_config.get(IB_CONFIG_KEY_DEFAULT_SORT));
+                GM_setValue(IB_CONFIG_KEY_VERBOSE_LOGGING,            GM_config.get(IB_CONFIG_KEY_VERBOSE_LOGGING));
+
+                IB_LogInfo("Settings saved with the following keys and values:",
+                {
+                    [IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_BORDER]: GM_getValue(IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_BORDER),
+                    [IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_TEXT]:   GM_getValue(IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_TEXT),
+                    [IB_CONFIG_KEY_UNFITTING_HANDLING_MODE]:    GM_getValue(IB_CONFIG_KEY_UNFITTING_HANDLING_MODE),
+                    [IB_CONFIG_KEY_DEFAULT_SORT]:               GM_getValue(IB_CONFIG_KEY_DEFAULT_SORT),
+                    [IB_CONFIG_KEY_VERBOSE_LOGGING]:            GM_getValue(IB_CONFIG_KEY_VERBOSE_LOGGING)
+                });
+
+                window.location.reload(); // Reload the page to apply the new settings
+            },
+        },
+        frame: document.body.appendChild(document.createElement("div")),
+        css: IB_CONFIG_STYLE
+    });
+
+    // Register menu command to open the configuration modal
+    GM_registerMenuCommand(IB_CONFIG_MENU_TITLE, IB_OpenConfigModal, IB_CONFIG_MENU_SHORTCUT);
+}
+
+/** Opens the configuration modal and removes default GM_config styling. */
+function IB_OpenConfigModal()
+{
+    // Open the modal
+    GM_config.open();
+
+    // After opening has inserted the modal into the DOM we need to make some changes on it
+    var configModal = document.querySelector(`#${IB_CONFIG_ID}`);
+    if (configModal)
+    {
+        // Remove the default styling that GM_config adds, since we have our own defined
+        configModal.removeAttribute("style");
+
+        // "Hungarianize" reset link text ;)
+        var resetLink = configModal.querySelector(`#${IB_CONFIG_ID}_resetLink`);
+        if (resetLink)
+        {
+            resetLink.textContent = IB_CONFIG_HUN_RESET_LINK_TEXT;
+        }
+        else
+        {
+            IB_LogError("Cannot find reset link in DOM after opening it!");
+        }
+
+        // "Hungarianize" close button text ;)
+        var closeButton = configModal.querySelector(`#${IB_CONFIG_ID}_closeBtn`);
+        if (closeButton)
+        {
+            closeButton.textContent = IB_CONFIG_HUN_CLOSE_BUTTON_TEXT;
+        }
+        else
+        {
+            IB_LogError("Cannot find close button in DOM after opening it!");
+        }
+
+        // "Hungarianize" save button text ;)
+        var saveButton = configModal.querySelector(`#${IB_CONFIG_ID}_saveBtn`);
+        if (saveButton)
+        {
+            saveButton.textContent = IB_CONFIG_HUN_SAVE_BUTTON_TEXT;
+        }
+        else
+        {
+            IB_LogError("Cannot find save button in DOM after opening it!");
+        }
+    }
+    else
+    {
+        IB_LogError("Cannot find configuration modal in DOM after opening it!");
+    }
+}
+
 /** Parses price text into a number (e.g. "58 990 Ft" → 58990). */
 function IB_ParsePrice(str)
 {
@@ -129,7 +436,7 @@ function IB_ParsePrice(str)
     {
         return Infinity;
     }
-    
+
     var formattedStr = str
         .replace(IB_REGEX_WHITESPACE, "")
         .replace(IB_CURRENCY_SYMBOL, "")
@@ -152,7 +459,7 @@ function IB_CompareCardsByPrice(cardA, cardB, sortDirection)
     var priceA = IB_GetPrice(cardA);
     var priceB = IB_GetPrice(cardB);
 
-    return sortDirection === "ASC" ? priceA - priceB : priceB - priceA;
+    return sortDirection === IB_CONFIG_DEFAULT_SORT_OPTION_ASC ? priceA - priceB : priceB - priceA;
 }
 
 /** Gets the sort direction from the product grid header, or returns null if not found. */
@@ -175,13 +482,13 @@ function IB_GetSortDirectionFromGridHeader()
     switch (selectedOption.value.toLowerCase())
     {
         case IB_SEARCH_PARAM_SORT_ORDER_ASC:
-            IB_LogInfo(`Found "${selectedOption.value}" selected option in grid header, using sort direction: "${IB_SEARCH_PARAM_SORT_ORDER_ASC}".`);
-            return "ASC";
+            IB_LogInfo(`Found "${selectedOption.value}" selected option in grid header, using sort direction: "${IB_CONFIG_DEFAULT_SORT_OPTION_ASC}".`);
+            return IB_CONFIG_DEFAULT_SORT_OPTION_ASC;
 
         case IB_SEARCH_PARAM_SORT_ORDER_DESC:
-            IB_LogInfo(`Found "${selectedOption.value}" selected option in grid header, using sort direction: "${IB_SEARCH_PARAM_SORT_ORDER_DESC}".`);
-            return "DESC";
-        
+            IB_LogInfo(`Found "${selectedOption.value}" selected option in grid header, using sort direction: "${IB_CONFIG_DEFAULT_SORT_OPTION_DESC}".`);
+            return IB_CONFIG_DEFAULT_SORT_OPTION_DESC;
+
         default:
             IB_LogWarn(`Unknown selected sort option found in grid header: "${selectedOption.value}"!`);
             return null;
@@ -208,13 +515,13 @@ function IB_GetSortDirectionFromURL()
     switch (sortParam.toLowerCase())
     {
         case IB_SEARCH_PARAM_SORT_ORDER_ASC:
-            IB_LogInfo(`Found "${sortParam}" parameter in URL, using sort direction: "${IB_SEARCH_PARAM_SORT_ORDER_ASC}".`);
-            return "ASC";
+            IB_LogInfo(`Found "${sortParam}" parameter in URL, using sort direction: "${IB_CONFIG_DEFAULT_SORT_OPTION_ASC}".`);
+            return IB_CONFIG_DEFAULT_SORT_OPTION_ASC;
 
         case IB_SEARCH_PARAM_SORT_ORDER_DESC:
-            IB_LogInfo(`Found "${sortParam}" parameter in URL, using sort direction: "${IB_SEARCH_PARAM_SORT_ORDER_DESC}".`);
-            return "DESC";
-        
+            IB_LogInfo(`Found "${sortParam}" parameter in URL, using sort direction: "${IB_CONFIG_DEFAULT_SORT_OPTION_DESC}".`);
+            return IB_CONFIG_DEFAULT_SORT_OPTION_DESC;
+
         default:
             IB_LogWarn(`Unknown "${IB_SEARCH_PARAM_SORT_ORDER_NAME}" parameter found in URL: "${sortParam}"!`);
             return null;
@@ -228,7 +535,7 @@ function IB_IsHighlighted(card)
     var hasHighlightedText = card.textContent
         .toLowerCase()
         .includes(IB_HIGHLIGHTED_TEXT_TO_REMOVE.toLowerCase());
-    
+
     return hasHighlightedBorder || hasHighlightedText;
 }
 
@@ -275,7 +582,7 @@ function IB_RemoveHighlighting(card)
     }
 
     // Remove purple border if exists and if enabled in settings
-    if (IB_KIEMELES_VIZUALIS_ELTAVOLITASA_KERET)
+    if (GM_getValue(IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_BORDER))
     {
         var borderElem = card.querySelector(IB_SELECTOR_BORDER_HIGHLIGHTED_CLASS);
         if (borderElem)
@@ -289,7 +596,7 @@ function IB_RemoveHighlighting(card)
     }
 
     // Remove "Kiemelt" label if enabled in settings
-    if (IB_KIEMELES_VIZUALIS_ELTAVOLITASA_FELIRAT)
+    if (GM_getValue(IB_CONFIG_KEY_REMOVE_HIGHLIGHTING_TEXT))
     {
         var highlightedTextFound = false;
 
@@ -318,9 +625,10 @@ function IB_RemoveHighlighting(card)
 /** Injects custom CSS to the document head, that can be used to mark highlighted cards that are out of place if their handling mode is set so. */
 function IB_InjectIbCssIfNeeded()
 {
-    if (IB_NEM_ODAILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA.toUpperCase() === "HALVANYIT")
+    if (GM_getValue(IB_CONFIG_KEY_UNFITTING_HANDLING_MODE) === IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_FADE)
     {
-        var ibCss = document.createElement('style');
+        var ibCss = document.createElement("style");
+        ibCss.type = "text/css";
         ibCss.innerHTML = IB_CSS_STYLE_HIGHLIGHTED_OUT_OF_PLACE;
         document.head.appendChild(ibCss);
     }
@@ -329,7 +637,7 @@ function IB_InjectIbCssIfNeeded()
 /** Logs an info message to the console with a prefix if extra logging is enabled in settings. */
 function IB_LogInfo(message, obj)
 {
-    if (!IB_BOVEBB_LOGOLAS_ENGEDELYEZVE)
+    if (!GM_getValue(IB_CONFIG_KEY_VERBOSE_LOGGING))
     {
         return;
     }
@@ -392,8 +700,8 @@ function IB_Main(grid)
         });
 
         // Getting highlighted cards (that were tagged in the previous step or in a previous run) and normal cards
-        highlightedCards = allCards.filter(card => IB_IsTagged(card));
-        normalCards = allCards.filter(card => !IB_IsTagged(card));
+        highlightedCards = allCards.filter(card =>  IB_IsTagged(card));
+        normalCards      = allCards.filter(card => !IB_IsTagged(card));
 
         if (!highlightedCards || highlightedCards?.length < 1)
         {
@@ -412,25 +720,21 @@ function IB_Main(grid)
             IB_LogInfo(`Removed highlighted visuals from ${unprocessedHighlightedCards.length} cards.`);
         }
 
+
+
         // Getting sort direction from the grid header or from the URL query parameters as a fallback
         var sortDirection = IB_GetSortDirectionFromGridHeader() ?? IB_GetSortDirectionFromURL();
         if (!sortDirection)
         {
-            IB_LogWarn(`Failed to determine sort direction from grid header or URL, attempting to use default ordering direction: "${IB_ALAPERTELMEZETT_RENDEZES.toUpperCase()}".`);
-        }
+            IB_LogWarn(`Failed to determine sort direction from grid header or URL, attempting to use default ordering direction: "${GM_getValue(IB_CONFIG_KEY_DEFAULT_SORT)}".`);
 
-        sortDirection = IB_ALAPERTELMEZETT_RENDEZES;
-        if (!sortDirection)
-        {
-            IB_LogError("Failed to determine sort direction, ordering is skipped!");
-            return;
+            sortDirection = GM_getValue(IB_CONFIG_KEY_DEFAULT_SORT);
+            if (sortDirection !== IB_CONFIG_DEFAULT_SORT_OPTION_ASC && sortDirection !== IB_CONFIG_DEFAULT_SORT_OPTION_DESC)
+            {
+                IB_LogError("Failed to determine sort direction, ordering is skipped!");
+                return;
+            }
         }
-        else
-        {
-            sortDirection = sortDirection.toUpperCase();
-        }
-
-        
 
         // Sorting ALL cards by price based on the determined sort direction
         allCards.sort((a, b) => IB_CompareCardsByPrice(a, b, sortDirection));
@@ -460,22 +764,22 @@ function IB_Main(grid)
             var highlightedPrice = IB_GetPrice(highlightedCard);
 
             var isHighlightedPriceOutsideNormalRange =
-                (sortDirection === "ASC"  && highlightedPrice > maxNormalPrice) ||
-                (sortDirection === "DESC" && highlightedPrice < minNormalPrice);
-            
+                (sortDirection === IB_CONFIG_DEFAULT_SORT_OPTION_ASC  && highlightedPrice > maxNormalPrice) ||
+                (sortDirection === IB_CONFIG_DEFAULT_SORT_OPTION_DESC && highlightedPrice < minNormalPrice);
+
             if (isHighlightedPriceOutsideNormalRange)
             {
-                switch (IB_NEM_ODAILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA.toUpperCase())
+                switch (GM_getValue(IB_CONFIG_KEY_UNFITTING_HANDLING_MODE))
                 {
-                    case "ELREJT":
+                    case IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_HIDE:
                         highlightedCard.style.display = IB_STYLE_DISPLAY_NONE;
                         IB_LogInfo(`Found highlighted card with price of ${highlightedPrice} outside price range and hid it.`);
                         break;
-                    case "HALVANYIT":
+                    case IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_FADE:
                         highlightedCard.classList.add(IB_CLASS_NAME_HIGHLIGHTED_OUT_OF_PLACE);
                         IB_LogInfo(`Found highlighted card with price of ${highlightedPrice} outside price range and applied custom style on it.`);
                         break;
-                    case "HAGY":
+                    case IB_CONFIG_UNFITTING_HANDLE_MODE_OPTION_NONE:
                     default:
                         IB_LogInfo(`Found highlighted card with price of ${highlightedPrice} outside price range and did nothing with it.`);
                         break;
@@ -545,6 +849,13 @@ var IB_pageLoadObserver = new MutationObserver(() =>
 
 // Inject CSS into <head> if needed
 IB_InjectIbCssIfNeeded();
+
+
+
+// Initialize the configuration modal
+IB_InitConfig();
+
+
 
 // Start observing the document body for changes to find the product grid (this triggers the main logic observer once the grid is found)
 IB_pageLoadObserver.observe(document.body,

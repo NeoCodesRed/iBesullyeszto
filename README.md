@@ -15,33 +15,21 @@ Na, ez a szkript képes
 
 # Hogyan használd
 
-- Firefox esetén telepítsd
-    - a [Greasemonkey plug-int](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/)
-    - vagy a [Tampermonkey plug-int](https://www.tampermonkey.net/index.php?browser=firefox)
-- Chrome esetén telepítsd a [Tampermonkey plug-int](https://www.tampermonkey.net/index.php?browser=chrome)
+- Telepítsd a Tampermonkey extensiont
+    - [Firefoxra](https://www.tampermonkey.net/index.php?browser=firefox)
+    - [Chromera](https://www.tampermonkey.net/index.php?browser=chrome)
 
-Majd [klikkelj ide](https://github.com/NeoCodesRed/iBesullyeszto/raw/refs/heads/master/iBesullyeszto.user.js), miután a plugin fut a böngésződben (privát ablak esetén valószínűleg külön engedélyezned kell a plugin beállításokban) és fogadd el a felugró ablakban a telepítést.
+(Firefoxra a [Greasemonkey extensiont](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/) is használhatod, de nálam valamiért nem működik vele a beállítások megnyitása.)
+
+Majd [klikkelj ide](https://github.com/NeoCodesRed/iBesullyeszto/raw/refs/heads/master/iBesullyeszto.user.js), miután az extension fut a böngésződben (privát ablak esetén valószínűleg külön engedélyezned kell a beállításokban) és fogadd el a felugró ablakban a telepítést.
 
 Kész. Ezután a szkript használatra kész és automatikusan frissülni is fog.
 
 # Testreszabás
 
-A szkript telepítése után a Greasemonkey / Tampermonkey plugin beállításainál meg tudod nyitni a szkript kódját és az elején lévő néhány beállítás értékének módosításával testre szabhatod a viselkedését.
+A szkript telepítése után nyiss meg egy olyan oldalt az iPon.hu-n, ahol betöltődnek termékek, majd a Tampermonkey extension ikonjára kattintva látni fogod a "Beállítások" opciót. Erre klikkelve megnyílik a beállítások ablak.
 
-**<ins>MINDEN ALKALOMMAL, HA A SZKRIPT FRISSÜL, EZT ÚJRA MEG KELL TENNED, AMENNYIBEN A BEÁLLÍTÁSAID ELTÉRNEK AZ ALAPÉRTELMEZETT ÉRTÉKEKTŐL!</ins>**
-(Erre kitalálok majd valamit. 😉)
-
-Kézi módosítás nélkül az alapértelmezett értékek érvényesek.
-
-A beállítások lényegében az itt korábban leírt funkciókat kapcsolják ki/be, illetve részletes leírás van előttük a kódban, hogy pontosan mit csinálnak és milyen lehetőségeket adhatsz nekik értékül. Ezért itt csak egy nagyon rövid összefoglalót készítek:
-
-|                   Beállítás                    |                        Rövid leírás                       |        Lehetséges értékek       |       Alapértelmezett érték       |
-|------------------------------------------------|-----------------------------------------------------------|---------------------------------|-----------------------------------|
-| IB_KIEMELES_VIZUALIS_ELTAVOLITASA_KERET        | Lila keret eltávolítása be/ki                             | true / false                    | true                              |
-| IB_KIEMELES_VIZUALIS_ELTAVOLITASA_FELIRAT      | KIEMELT felirat eltávolítása be/ki                        | true / false                    | true                              |
-| IB_NEM_ODAILLO_KIEMELT_TERMEKEK_KEZELESI_MODJA | Ár alapján nem odaillő kiemelt termékek kezelésének módja | "ELREJT" / "HALVANYIT" / "HAGY" | "HALVANYIT"                       |
-| IB_ALAPERTELMEZETT_RENDEZES                    | Ár szerinti rendezés kikényszerítése                      | "ASC" / "DESC" / null           | null                              |
-| IB_BOVEBB_LOGOLAS_ENGEDELYEZVE                 | Bővebb logolás (technikai)                                | true / false                    | false                             |
+A beállítások lényegében az itt fentebb leírt funkciókat kapcsolják ki/be, illetve részletes leírás van hozzájuk a beállítások panelen.
 
 # Jogi dolgok
 
