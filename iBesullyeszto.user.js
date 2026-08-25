@@ -3,7 +3,7 @@
 // @name        iBesüllyesztő
 // @namespace   Neo
 // @description Kiemelt termékek helyett pragmatikus, ár szerinti rendezés.
-// @version     1.0.0
+// @version     1.0.1
 // @author      Neo
 // @match       https://*.ipon.hu/shop/*
 
@@ -15,6 +15,8 @@
 // @icon        https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/master/iBesullyeszto_icon.png
 // @downloadURL https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/master/iBesullyeszto.user.js
 // @updateURL   https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/master/iBesullyeszto.user.js
+
+// @license     https://raw.githubusercontent.com/NeoCodesRed/iBesullyeszto/refs/heads/master/LICENSE
 
 // ==/UserScript==
 
