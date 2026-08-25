@@ -15,9 +15,9 @@ Na, ez a szkript képes
 
 # Hogyan használd
 
-- Telepítsd a Tampermonkey extensiont
-    - [Firefoxra](https://www.tampermonkey.net/index.php?browser=firefox)
-    - [Chromera](https://www.tampermonkey.net/index.php?browser=chrome)
+Telepítsd a Tampermonkey extensiont
+- [Firefoxra](https://www.tampermonkey.net/index.php?browser=firefox)
+- [Chromera](https://www.tampermonkey.net/index.php?browser=chrome)
 
 (Firefoxra a [Greasemonkey extensiont](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/) is használhatod, de nálam valamiért nem működik vele a beállítások megnyitása.)
 
